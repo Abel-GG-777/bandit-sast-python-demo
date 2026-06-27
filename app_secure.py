@@ -1,6 +1,9 @@
 import hashlib
+import ipaddress
 import os
-import subprocess
+import platform
+import shutil
+import subprocess  # nosec B404 - Used with validated input and shell=False.
 
 from flask import Flask, request
 
@@ -10,6 +13,14 @@ app = Flask(__name__)
 # Example for local testing:
 # PowerShell: $env:ADMIN_PASSWORD="change-me"
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
+
+
+def validate_ip_address(host):
+    """Accept only valid IP addresses for this demo endpoint."""
+    try:
+        return str(ipaddress.ip_address(host))
+    except ValueError:
+        return None
 
 
 @app.route("/")
@@ -38,13 +49,25 @@ def login():
 @app.route("/ping")
 def ping():
     host = request.args.get("host", "127.0.0.1")
+    safe_host = validate_ip_address(host)
 
-    # Improvement: pass arguments as a list and avoid shell=True.
-    # The user input is treated as one argument, not as shell syntax.
-    result = subprocess.check_output(
-        ["ping", "-n", "1", host],
+    if safe_host is None:
+        return {"error": "Only valid IP addresses are allowed"}, 400
+
+    ping_path = shutil.which("ping")
+
+    if ping_path is None:
+        return {"error": "ping command was not found"}, 500
+
+    count_flag = "-n" if platform.system().lower() == "windows" else "-c"
+
+    # Improvement: the host is validated, shell=True is avoided, and arguments
+    # are passed as a list so shell metacharacters are not interpreted.
+    result = subprocess.check_output(  # nosec B603 - IP input is validated above.
+        [ping_path, count_flag, "1", safe_host],
         text=True,
         stderr=subprocess.STDOUT,
+        timeout=5,
     )
     return f"<pre>{result}</pre>"
 

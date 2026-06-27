@@ -35,6 +35,8 @@ The secure version demonstrates simple improvements:
 - The password is read from the `ADMIN_PASSWORD` environment variable.
 - `shell=True` is avoided.
 - `subprocess.check_output` receives a list of arguments.
+- The `host` parameter is validated as an IP address before running `ping`.
+- The remaining safe `subprocess` usage is documented with `# nosec` comments.
 - MD5 is replaced with SHA-256.
 - Flask debug mode is disabled.
 
@@ -101,12 +103,14 @@ The pipeline:
 
 This shows that Bandit can analyze the repository automatically as part of a CI/CD workflow.
 
+Because `app.py` intentionally contains vulnerabilities, Bandit returns a non-zero exit code when it finds issues. The workflow uses `continue-on-error: true` so the GitHub Actions run can display the findings clearly without stopping the academic demo.
+
 ## Vulnerable vs Secure Comparison
 
 | Topic | `app.py` vulnerable version | `app_secure.py` improved version |
 | --- | --- | --- |
 | Password handling | Hardcoded in source code | Loaded from environment variable |
 | Command execution | Uses `shell=True` | Uses a list of arguments |
-| User input | Concatenated into a command string | Passed as a single argument |
+| User input | Concatenated into a command string | Validated as an IP address |
 | Hashing | Uses MD5 | Uses SHA-256 |
 | Flask debug | Enabled | Disabled |
