@@ -28,5 +28,5 @@ jobs:
           python -m pip install -r requirements.txt
 
       - name: Run Bandit SAST scan
-        continue-on-error: true
-        run: python -m bandit -r . -f txt
+        run: |
+          python -m bandit -r . -f txt || true
