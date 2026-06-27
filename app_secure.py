@@ -3,7 +3,8 @@ import ipaddress
 import os
 import platform
 import shutil
-import subprocess  # nosec B404 - Used with validated input and shell=False.
+# Used with validated input and shell=False in this educational demo.
+import subprocess  # nosec B404
 
 from flask import Flask, request
 
@@ -63,7 +64,8 @@ def ping():
 
     # Improvement: the host is validated, shell=True is avoided, and arguments
     # are passed as a list so shell metacharacters are not interpreted.
-    result = subprocess.check_output(  # nosec B603 - IP input is validated above.
+    # IP input is validated above.
+    result = subprocess.check_output(  # nosec B603
         [ping_path, count_flag, "1", safe_host],
         text=True,
         stderr=subprocess.STDOUT,
